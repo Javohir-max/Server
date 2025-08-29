@@ -84,6 +84,19 @@ app.post("/api/auth/login", async (req, res) => {
   res.json({ token, user });
 });
 
+// 📌 Получить профиль текущего пользователя
+app.get("/api/auth/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password"); // убираем пароль
+    if (!user) return res.status(404).json({ msg: "Пользователь не найден" });
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ msg: "Ошибка сервера", error: err.message });
+  }
+});
+
+
 // 📌 Получить всех пользователей
 app.get("/api/users", authMiddleware, async (req, res) => {
   const users = await User.find();
