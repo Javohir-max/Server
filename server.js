@@ -5,6 +5,8 @@ import cors from "cors";
 import multer from "multer";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import fs from "fs"; // 👈 добавь
+import path from "path"; // 👈 добавь
 
 import User from "./models/User.js";
 import Post from "./models/Post.js";
@@ -15,6 +17,13 @@ const app = express();
 app.use(express.json());
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use("/uploads", express.static("uploads")); // отдаём картинки
+
+// 📌 Проверяем, есть ли папка uploads — если нет, создаём
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  console.log("📂 Папка uploads создана автоматически");
+}
 
 // подключение к MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -27,6 +36,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname)
 });
 const upload = multer({ storage });
+
 
 // auth middleware
 function authMiddleware(req, res, next) {
