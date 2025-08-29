@@ -60,7 +60,7 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      avatar: req.file ? `/uploads/${req.file.filename}` : null
+      avatar: req.file ? `${process.env.API_URL}/uploads/${req.file.filename}` : null
     });
 
     await newUser.save();
@@ -109,7 +109,7 @@ app.post("/api/posts", authMiddleware, upload.single("postImg"), async (req, res
     const newPost = new Post({
       userId: req.user.id,
       title: req.body.title,
-      postImg: req.file ? `/uploads/${req.file.filename}` : null
+      postImg: req.file ? `${process.env.API_URL}/uploads/${req.file.filename}` : null
     });
 
     await newPost.save();
