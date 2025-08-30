@@ -39,6 +39,7 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     let avatarUrl = null;
+    let imgName = null;
     if (req.file) {
       const fileName = `avatars/${Date.now()}-${req.file.originalname}`;
       const { error } = await supabase.storage
@@ -48,9 +49,11 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
 
       const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(fileName);
       avatarUrl = publicUrl.publicUrl;
+      imgName = fileName;
     }
+    
 
-    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl, fileName: fileName });
+    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl, imageName: imgName });
     await newUser.save();
 
     res.json({ msg: "Пользователь зарегистрирован", user: newUser });
