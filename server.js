@@ -50,7 +50,7 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
       avatarUrl = publicUrl.publicUrl;
     }
 
-    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl });
+    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl, fileName: fileName });
     await newUser.save();
 
     res.json({ msg: "Пользователь зарегистрирован", user: newUser });
