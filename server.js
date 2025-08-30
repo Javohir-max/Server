@@ -49,7 +49,7 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
 
       const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(fileName);
       avatarUrl = publicUrl.publicUrl;
-      imgName = fileName;
+      imgName = fileName.replace("avatars/", "");
     }
     
 
