@@ -41,15 +41,15 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
     let avatarUrl = null;
     let imgName = null;
     if (req.file) {
-      const fileName = `avatars/${Date.now()}-${req.file.originalname}`;
+      const fileName = `${process.env.S3_BUCKET_ONE}/${Date.now()}-${req.file.originalname}`;
       const { error } = await supabase.storage
-        .from("avatars")
+        .from(process.env.S3_BUCKET_ONE) // имя bucket-а
         .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
       if (error) throw error;
 
-      const { data: publicUrl } = supabase.storage.from("avatars").getPublicUrl(fileName);
+      const { data: publicUrl } = supabase.storage.from(process.env.S3_BUCKET_ONE).getPublicUrl(fileName);
       avatarUrl = publicUrl.publicUrl;
-      imgName = fileName.replace("avatars/", "");
+      imgName = fileName.replace(process.env.S3_BUCKET_ONE, "");
     }
     
 
@@ -125,9 +125,33 @@ app.get("/api/posts", async (req, res) => {
 // 📌 Удалить аккаунт
 app.delete("/api/users/me", authMiddleware, async (req, res) => {
   try {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ error: "Пользователь не найден" });
+    }
+
+    // 📂 Если у юзера есть аватар — удалить из Supabase
+    if (user.imageName) {
+      const filePath = user.imageName;
+
+      const { error } = await supabase.storage
+        .from(process.env.S3_BUCKET_ONE) // имя bucket-а
+        .remove([filePath]);
+
+      if (error) {
+        console.error("❌ Ошибка удаления из Supabase:", error.message);
+      } else {
+        console.log("✅ Аватар удалён из Supabase");
+      }
+    }
+
+    // ❌ Удаляем юзера из MongoDB
     await User.findByIdAndDelete(req.user.id);
-    res.json({ msg: "Пользователь удалён" });
+
+    res.json({ msg: "Пользователь и аватар удалены" });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Ошибка сервера" });
   }
 });
