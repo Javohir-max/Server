@@ -49,7 +49,7 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
 
       const { data: publicUrl } = supabase.storage.from(process.env.S3_BUCKET_ONE).getPublicUrl(fileName);
       avatarUrl = publicUrl.publicUrl;
-      imgName = fileName.replace(process.env.S3_BUCKET_ONE, "");
+      imgName = fileName
     }
     
 
