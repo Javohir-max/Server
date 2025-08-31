@@ -122,6 +122,14 @@ app.get("/api/posts", async (req, res) => {
   res.json(posts);
 });
 
+app.get("/api/start", async (req, res) => {
+  const response = {
+    message: "Server is running",
+    status: true
+  };
+  res.json(response);
+});
+
 // 📌 Удалить аккаунт
 app.delete("/api/users/me", authMiddleware, async (req, res) => {
   try {
