@@ -141,21 +141,23 @@ app.get("/api/users", authMiddleware, async (req, res) => {
 });
 
 // 📌 Создать пост
-app.post("/api/posts", authMiddleware, upload.single("postImg"), async (req, res) => {
+app.post("/api/posts", authMiddleware, upload.single("image"), async (req, res) => {
   try {
-    let postImgUrl = null;
+    let imageUrl = null;
+    let postName = null;
     if (req.file) {
-      const fileName = `posts/${Date.now()}-${req.file.originalname}`;
+      const fileName = `${process.env.S3_BUCKET_TWO}/${Date.now()}-${req.file.originalname}`;
       const { error } = await supabase.storage
-        .from("posts")
+        .from(process.env.S3_BUCKET_TWO)
         .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
       if (error) throw error;
 
-      const { data: publicUrl } = supabase.storage.from("posts").getPublicUrl(fileName);
-      postImgUrl = publicUrl.publicUrl;
+      const { data: publicUrl } = supabase.storage.from(process.env.S3_BUCKET_TWO).getPublicUrl(fileName);
+      imageUrl = publicUrl.publicUrl;
+      postName = fileName
     }
 
-    const newPost = new Post({ userId: req.user.id, title: req.body.title, postImg: postImgUrl });
+    const newPost = new Post({ userId: req.user.id, title: req.body.title, image: imageUrl, postImgName: postName });
     await newPost.save();
 
     res.json({ msg: "Пост создан", post: newPost });
