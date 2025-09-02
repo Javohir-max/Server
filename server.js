@@ -155,7 +155,7 @@ app.post("/api/posts", authMiddleware, upload.single("image"), async (req, res) 
       postName = fileName
     }
     console.log(req.user.id);
-    const newPost = new Post({ userId: req.user.id._id, title: req.body.title, image: imageUrl, postImgName: postName });
+    const newPost = new Post({ userId: req.user.id, title: req.body.title, image: imageUrl, postImgName: postName });
     await newPost.save();
 
     res.json({ msg: "Пост создан", post: newPost });
@@ -166,7 +166,7 @@ app.post("/api/posts", authMiddleware, upload.single("image"), async (req, res) 
 
 // 📌 Все посты
 app.get("/api/posts", async (req, res) => {
-  const posts = await Post.find().populate("userId", "name email avatar");
+  const posts = await Post.find();
   res.json(posts);
 });
 
