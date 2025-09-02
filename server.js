@@ -102,7 +102,6 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
     }
 
     // ⚡️ если загружен новый аватар
-    console.log(req.file);
     if (req.file) {
       // удалить старый если есть
       if (user.imageName) {
@@ -110,7 +109,6 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
       }
 
       const fileName = `${process.env.S3_BUCKET_ONE}/${Date.now()}-${req.file.originalname}`;
-      console.log(req.file.originalname);
       const { error } = await supabase.storage
         .from(process.env.S3_BUCKET_ONE)
         .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
