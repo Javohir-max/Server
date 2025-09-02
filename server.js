@@ -154,8 +154,8 @@ app.post("/api/posts", authMiddleware, upload.single("image"), async (req, res) 
       imageUrl = publicUrl.publicUrl;
       postName = fileName
     }
-
-    const newPost = new Post({ userId: req.user.id, title: req.body.title, image: imageUrl, postImgName: postName });
+    console.log(req.user.id);
+    const newPost = new Post({ userId: req.user.id._id, title: req.body.title, image: imageUrl, postImgName: postName });
     await newPost.save();
 
     res.json({ msg: "Пост создан", post: newPost });
