@@ -102,6 +102,7 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
     }
 
     // ⚡️ если загружен новый аватар
+    console.log(req.file);
     if (req.file) {
       // удалить старый если есть
       if (user.imageName) {
