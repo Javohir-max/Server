@@ -86,6 +86,52 @@ app.get("/api/auth/me", authMiddleware, async (req, res) => {
   }
 });
 
+// 📌 Обновить профиль
+app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: "Пользователь не найден" });
+
+    const { name, email, password } = req.body;
+
+    // обновляем поля
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) {
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    // ⚡️ если загружен новый аватар
+    if (req.file) {
+      // удалить старый если есть
+      if (user.imageName) {
+        await supabase.storage.from(process.env.S3_BUCKET_ONE).remove([user.imageName]);
+      }
+
+      const fileName = `${process.env.S3_BUCKET_ONE}/${Date.now()}-${req.file.originalname}`;
+      const { error } = await supabase.storage
+        .from(process.env.S3_BUCKET_ONE)
+        .upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
+      if (error) throw error;
+
+      const { data: publicUrl } = supabase.storage
+        .from(process.env.S3_BUCKET_ONE)
+        .getPublicUrl(fileName);
+
+      user.avatar = publicUrl.publicUrl;
+      user.imageName = fileName;
+    }
+
+    await user.save();
+
+    res.json({ msg: "Профиль обновлён", user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка обновления профиля" });
+  }
+});
+
+
 // 📌 Все пользователи
 app.get("/api/users", authMiddleware, async (req, res) => {
   const users = await User.find();
