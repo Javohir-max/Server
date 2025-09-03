@@ -32,6 +32,23 @@ function authMiddleware(req, res, next) {
   });
 }
 
+function generateTokens(user) {
+  const accessToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" } // живет 15 минут
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user._id },
+    process.env.JWT_REFRESH_SECRET, // отдельный секрет
+    { expiresIn: "30d" } // живет 30 дней
+  );
+
+  return { accessToken, refreshToken };
+}
+
+
 // 📌 Регистрация с аватаркой
 app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
   try {
@@ -71,8 +88,49 @@ app.post("/api/auth/login", async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) return res.status(400).json({ msg: "Неверный пароль" });
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-  res.json({ token, user });
+  const { accessToken, refreshToken } = generateTokens(user);
+
+  // сохраняем refresh в базе
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  res.json({ accessToken, refreshToken, user });
+});
+
+// 📌 Обновление accessToken по refreshToken
+app.post("/api/auth/refresh", async (req, res) => {
+  const { refreshToken } = req.body;
+  if (!refreshToken) return res.status(401).json({ msg: "Нет refresh токена" });
+
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user || user.refreshToken !== refreshToken) {
+      return res.status(403).json({ msg: "Неверный refresh токен" });
+    }
+
+    // генерим новый accessToken
+    const accessToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    res.json({ accessToken });
+  } catch (err) {
+    res.status(403).json({ msg: "Неверный или просроченный refresh" });
+  }
+});
+
+// 📌 Логаут
+app.post("/api/auth/logout", authMiddleware, async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (user) {
+    user.refreshToken = null; // убираем refresh
+    await user.save();
+  }
+  res.json({ msg: "Вы вышли" });
 });
 
 // 📌 Профиль
@@ -130,7 +188,6 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
     res.status(500).json({ error: "Ошибка обновления профиля" });
   }
 });
-
 
 // 📌 Все пользователи
 app.get("/api/users", authMiddleware, async (req, res) => {
