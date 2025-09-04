@@ -35,8 +35,7 @@ function authMiddleware(req, res, next) {
 function generateTokens(user) {
   const accessToken = jwt.sign(
     { id: user._id },
-    process.env.JWT_SECRET,
-    { expiresIn: "15m" } // живет 15 минут
+    process.env.JWT_SECRET
   );
 
   const refreshToken = jwt.sign(
