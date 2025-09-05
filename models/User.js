@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   avatar: { type: String }, // путь до аватарки
   imageName: { type: String },
-  refreshToken: { type: String, default: null } // токен для обновления
+  refreshToken: { type: String, default: null }, // токен для обновления
+  date: { type: Date, default: null },
 });
 
 export default mongoose.model("User", userSchema);

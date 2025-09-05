@@ -51,7 +51,7 @@ function generateTokens(user) {
 // 📌 Регистрация с аватаркой
 app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, date } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     let avatarUrl = null;
@@ -69,7 +69,7 @@ app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
     }
     
 
-    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl, imageName: imgName });
+    const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl, imageName: imgName, date });
     await newUser.save();
 
     res.json({ msg: "Пользователь зарегистрирован", user: newUser });
