@@ -25,13 +25,22 @@ const upload = multer({ storage });
 function authMiddleware(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ msg: "Нет токена" });
-
+  
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ msg: "Неверный токен" });
     req.user = user;
     next();
   });
 }
+
+// ⚡️ Настройка почтового транспорта
+const transporter = nodemailer.createTransport({
+  service: "gmail", // можно "yandex", "mail.ru", "smtp.mailgun.org"
+  auth: {
+    user: process.env.EMAIL_USER, // твоя почта
+    pass: process.env.EMAIL_PASS  // пароль или app-password
+  }
+})
 
 function generateTokens(user) {
   const accessToken = jwt.sign(
@@ -47,7 +56,6 @@ function generateTokens(user) {
 
   return { accessToken, refreshToken };
 }
-
 
 // 📌 Регистрация с аватаркой
 app.post("/api/auth/register", upload.single("avatar"), async (req, res) => {
@@ -246,15 +254,6 @@ app.get("/api/start", async (req, res) => {
   res.json(response);
 });
 
-// ⚡️ Настройка почтового транспорта
-const transporter = nodemailer.createTransport({
-  service: "gmail", // можно "yandex", "mail.ru", "smtp.mailgun.org"
-  auth: {
-    user: process.env.EMAIL_USER, // твоя почта
-    pass: process.env.EMAIL_PASS  // пароль или app-password
-  }
-})
-
 // 📩 Роут для отправки писем
 app.post("/api/auth/reset-password", async (req, res) => {
     const { email } = req.body
@@ -271,7 +270,7 @@ app.post("/api/auth/reset-password", async (req, res) => {
             text: message
         })
 
-        res.json({ msg: "✅ Код отправлен на адрес", code: seccretCode })
+        res.json({ msg: "✅ Код отправлен на почту.", code: seccretCode })
     } catch (err) {
         console.error("Ошибка при отправке:", err)
         res.status(500).json({ error: "Ошибка при отправке кода" })
