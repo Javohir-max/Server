@@ -200,13 +200,6 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
 // 📌 Все пользователи
 app.get("/api/users", authMiddleware, async (req, res) => {
   try {
-    // const { email } = req.query;
-
-    // let query = {};
-    // if (email) {
-    //   query.email = new RegExp(email, "i"); // поиск по email (без учета регистра)
-    // }
-
     const users = await User.find().select("-password -refreshToken");
     res.json(users);
   } catch (err) {
@@ -257,6 +250,12 @@ app.get("/api/start", async (req, res) => {
 // 📩 Роут для отправки писем
 app.post("/api/auth/reset-password", async (req, res) => {
     const { email } = req.body
+    let query = {};
+    if (email) {
+      query.email = new RegExp(email); // поиск по email (без учета регистра)
+    }
+    const users = await User.find(query).select("-password -refreshToken");
+    console.log(users);
     if (!email) {
         return res.status(400).json({ error: "Почты нет!" })
     }
