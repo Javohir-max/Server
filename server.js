@@ -191,14 +191,14 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
 // 📌 Все пользователи
 app.get("/api/users", authMiddleware, async (req, res) => {
   try {
-    const { email } = req.query;
+    // const { email } = req.query;
 
-    let query = {};
-    if (email) {
-      query.email = new RegExp(email, "i"); // поиск по email (без учета регистра)
-    }
+    // let query = {};
+    // if (email) {
+    //   query.email = new RegExp(email, "i"); // поиск по email (без учета регистра)
+    // }
 
-    const users = await User.find(query);
+    const users = await User.find().select("-password -refreshToken");
     res.json(users);
   } catch (err) {
     console.error(err);
@@ -244,6 +244,38 @@ app.get("/api/start", async (req, res) => {
   };
   res.json(response);
 });
+
+// ⚡️ Настройка почтового транспорта
+const transporter = nodemailer.createTransport({
+  service: "gmail", // можно "yandex", "mail.ru", "smtp.mailgun.org"
+  auth: {
+    user: process.env.EMAIL_USER, // твоя почта
+    pass: process.env.EMAIL_PASS  // пароль или app-password
+  }
+})
+
+// 📩 Роут для отправки писем
+app.post("/api/auth/reset-password", async (req, res) => {
+    const { email } = req.body
+    if (!email) {
+        return res.status(400).json({ error: "Почты нет!" })
+    }
+    const seccretCode = Math.floor(100000 + Math.random() * 900000) // случайный код 6 цифр
+    const message = `Ваш код для восстановления: ${seccretCode}. Если вы не запрашивали восстановление, просто проигнорируйте это письмо.`
+    try {
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER, 
+            to: email,
+            subject: "Восстановление доступа",
+            text: message
+        })
+
+        res.json({ msg: "✅ Код отправлен на адрес", code: seccretCode })
+    } catch (err) {
+        console.error("Ошибка при отправке:", err)
+        res.status(500).json({ error: "Ошибка при отправке кода" })
+    }
+})
 
 // 📌 Удалить аккаунт
 app.delete("/api/users/me", authMiddleware, async (req, res) => {
