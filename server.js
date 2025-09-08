@@ -250,14 +250,14 @@ app.get("/api/start", async (req, res) => {
 // 📩 Роут для отправки писем
 app.post("/api/auth/reset-password", async (req, res) => {
     const { email } = req.body
-    let query = {};
-    if (email) {
-      query.email = new RegExp(email); // поиск по email (без учета регистра)
-    }
-    const users = await User.find(query).select("-password -refreshToken");
-    console.log(users);
     if (!email) {
-        return res.status(400).json({ error: "Почты нет!" })
+      return res.status(400).json({ error: "Нет почты!" })
+    }
+    let query = {};
+    query.email = new RegExp(email); // поиск по email (без учета регистра)
+    const users = await User.find(query).select("-password -refreshToken");
+    if (users.length === 0) {
+      return res.status(404).json({ error: "Почта не найдена" })
     }
     const seccretCode = Math.floor(100000 + Math.random() * 900000) // случайный код 6 цифр
     const message = `Ваш код для восстановления: ${seccretCode}. Если вы не запрашивали восстановление, просто проигнорируйте это письмо.`
@@ -269,11 +269,29 @@ app.post("/api/auth/reset-password", async (req, res) => {
             text: message
         })
 
-        res.json({ msg: "✅ Код отправлен на почту.", code: seccretCode })
+        res.json({ msg: "✅ Код отправлен на электронную почту.", code: seccretCode })
     } catch (err) {
         console.error("Ошибка при отправке:", err)
         res.status(500).json({ error: "Ошибка при отправке кода" })
     }
+})
+// 🔑 Роут для смены пароля
+app.put("/api/auth/change-password", async (req, res) => {
+    const { email, newPassword } = req.body
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: "Почты или пароля нет!" })
+    }
+    let query = {};
+    query.email = new RegExp(email);
+    const users = await User.find(query);
+    if (users.length === 0) {
+      return res.status(404).json({ error: "Пользователь не найден" })
+    } else {
+      const user = users[0]
+      user.password = await bcrypt.hash(newPassword, 10); // хешируем новый пароль
+      await user.save()
+      res.json({ msg: "✅ Пароль изменён." })
+    } 
 })
 
 // 📌 Удалить аккаунт
