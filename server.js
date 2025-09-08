@@ -190,8 +190,20 @@ app.put("/api/users/me", authMiddleware, upload.single("avatar"), async (req, re
 
 // 📌 Все пользователи
 app.get("/api/users", authMiddleware, async (req, res) => {
-  const users = await User.find();
-  res.json(users);
+  try {
+    const { email } = req.query;
+
+    let query = {};
+    if (email) {
+      query.email = new RegExp(email, "i"); // поиск по email (без учета регистра)
+    }
+
+    const users = await User.find(query);
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка при получении пользователей" });
+  }
 });
 
 // 📌 Создать пост
