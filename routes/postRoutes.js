@@ -6,6 +6,6 @@ import upload from "../middleware/upload.js";
 const router = Router();
 
 router.post("/me", authMiddleware, upload.single("image"), createPost);
-router.get("/all", authMiddleware, all);
+router.get("/all", all);
 
 export default router;
