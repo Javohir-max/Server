@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import User from "../models/User";
-import { supabase } from "../supabase";
+import User from "../models/User.js";
+import { supabase } from "../supabase.js";
 
 
 // Обновить профиль

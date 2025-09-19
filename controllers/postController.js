@@ -1,5 +1,5 @@
-import Post from "../models/Post";
-import { supabase } from "../supabase";
+import Post from "../models/Post.js";
+import { supabase } from "../supabase.js";
 
 
 // Создать пост
