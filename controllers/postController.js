@@ -37,7 +37,7 @@ export const all = async (req, res) => {
 // Мои посты
 export const mePosts = async (req, res) => {
     // твоя логика Все посты сюда
-    const posts = await User.findById(req.user.id).populate("userId", "name avatar");
+    const posts = await Post.findById(req.user.id).populate("userId", "name avatar");
     if (!posts) return res.status(404).json({ msg: "Пользователь не найден" });
     res.json(posts);
 };
