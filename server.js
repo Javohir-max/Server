@@ -11,7 +11,26 @@ const app = express();
 app.use(express.json());
 // app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 // app.use(cors({ origin: "https://site-nu-liart.vercel.app", credentials: true }));
-app.use(cors({ origin: "*", credentials: true }));
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://site-nu-liart.vercel.app"
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Если запрос без origin (например, Postman) – разрешаем
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        return callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
 // маршруты
 app.use("/api/auth", authRoutes);
