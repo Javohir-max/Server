@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { supabase } from "../supabase.js";
+import Post from "../models/Post.js";
 
 
 // Обновить профиль
@@ -63,35 +64,60 @@ export const all = async (req, res) => {
 
 // Удалить аккаунт
 export const delet = async (req, res) => {
-    // твоя логика Удалить аккаунт сюда
-    try {
-        const user = await User.findById(req.user.id);
+  try {
+    const user = await User.findById(req.user.id);
 
-        if (!user) {
-        return res.status(404).json({ error: "Пользователь не найден" });
-        }
-
-        // 📂 Если у юзера есть аватар — удалить из Supabase
-        if (user.imageName) {
-        const filePath = user.imageName;
-
-        const { error } = await Supabase.storage
-            .from(process.env.S3_BUCKET_ONE) // имя bucket-а
-            .remove([filePath]);
-
-        if (error) {
-            console.error("❌ Ошибка удаления из Supabase:", error.message);
-        } else {
-            console.log("✅ Аватар удалён из Supabase");
-        }
-        }
-
-        // ❌ Удаляем юзера из MongoDB
-        await User.findByIdAndDelete(req.user.id);
-
-        res.json({ msg: "Пользователь и аватар удалены" });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Ошибка сервера" });
+    if (!user) {
+      return res.status(404).json({ error: "Пользователь не найден" });
     }
+
+    // ✅ Если есть аватар — удаляем
+    if (user.imageName) {
+      const { error: avatarErr } = await supabase.storage
+        .from(process.env.S3_BUCKET_ONE)
+        .remove([user.imageName]);
+
+      if (avatarErr) {
+        console.error("❌ Ошибка удаления аватара из Supabase:", avatarErr.message);
+      } else {
+        console.log("✅ Аватар удалён из Supabase");
+      }
+    }
+
+    // ✅ Удаляем все посты юзера
+    const posts = await Post.find({ userId: req.user.id });
+
+    if (posts.length > 0) {
+      // соберём все пути файлов из постов (если там картинки в Supabase)
+      const filesToDelete = posts
+        .map((p) => p.postImgName) // предположим, что поле imageName хранит имя файла
+        .filter(Boolean);
+
+      if (filesToDelete.length > 0) {
+        const { error: postsErr } = await supabase.storage
+          .from(process.env.S3_BUCKET_ONE)
+          .remove(filesToDelete);
+
+        if (postsErr) {
+          console.error("❌ Ошибка удаления файлов постов:", postsErr.message);
+        } else {
+          console.log("✅ Файлы постов удалены из Supabase");
+        }
+      }
+
+      // удаляем записи постов в Mongo
+      await Post.deleteMany({ userId: req.user.id });
+    }
+
+    // ❌ Удаляем юзера
+    await User.findByIdAndDelete(req.user.id);
+
+    res.json({
+      msg: `Аккаунт и связанные данные удалены`,
+      deletedPosts: posts.length,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Ошибка сервера" });
+  }
 };
