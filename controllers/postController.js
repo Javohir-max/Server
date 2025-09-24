@@ -31,13 +31,17 @@ export const createPost = async (req, res) => {
 // Все посты
 export const all = async (req, res) => {
     // твоя логика Все посты сюда
-    const posts = await Post.find().populate("userId", "name email avatar");
+    const posts = await Post.find().populate("userId", "name avatar");
     res.json(posts);
 };
 // Мои посты
 export const mePosts = async (req, res) => {
-    // твоя логика Все посты сюда
-    const posts = await Post.findById(req.user.id).populate("userId", "name avatar");
-    if (!posts) return res.status(404).json({ msg: "Пользователь не найден", id: req.user.id });
+    // твоя логика Мои посты сюда
+    const posts = await Post.find({ userId: req.user.id })
+      .populate("userId", "name avatar"); // подтягиваем данные юзера
+
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({ msg: "У тебя пока нет постов" });
+    }
     res.json(posts);
 };
