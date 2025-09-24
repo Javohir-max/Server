@@ -95,7 +95,7 @@ export const delet = async (req, res) => {
 
       if (filesToDelete.length > 0) {
         const { error: postsErr } = await supabase.storage
-          .from(process.env.S3_BUCKET_ONE)
+          .from(process.env.S3_BUCKET_TWO)
           .remove(filesToDelete);
 
         if (postsErr) {

@@ -45,3 +45,56 @@ export const mePosts = async (req, res) => {
     }
     res.json(posts);
 };
+// Удалить мой пост
+export const deletMePost = async (req, res) => {
+    // твоя логика Удалить пост сюда
+    const { id } = req.body
+    const post = await Post.findById(id)
+    if (!post || post.length === 0) {
+      return res.status(404).json({ msg: "Пост не найден" });
+    }
+    // ✅ Если есть аватар — удаляем
+    if (post.postImgName) {
+        const { error: avatarErr } = await supabase.storage
+            .from(process.env.S3_BUCKET_TWO)
+            .remove([post.postImgName]);
+        if (avatarErr) {
+          console.error("❌ Ошибка удаления аватара из Supabase:", avatarErr.message);
+        } else {
+          console.log("✅ Аватар удалён из Supabase");
+        }
+    }
+
+    await Post.findByIdAndDelete(post._id);
+    res.json({ msg: "Пост удален ✅" });
+};
+// Удалить мои посты
+export const deletMePosts = async (req, res) => {
+    // твоя логика Удалить посты сюда
+    try {
+        const posts = await Post.find({ userId: req.user.id });
+    
+        if (posts.length === 0) return res.status(404).json({ error: "Посты не найден ❌" })
+          // соберём все пути файлов из постов (если там картинки в Supabase)
+        const filesToDelete = posts
+            .map((p) => p.postImgName) // предположим, что поле imageName хранит имя файла
+            .filter(Boolean);
+            
+        if (filesToDelete.length > 0) {
+            const { error: postsErr } = await supabase.storage
+                .from(process.env.S3_BUCKET_TWO)
+                .remove(filesToDelete);
+
+            if (postsErr) {
+                console.error("❌ Ошибка удаления файлов постов:", postsErr.message);
+            } else {
+                console.log("✅ Файлы постов удалены из Supabase");
+            }
+        }
+        await Post.deleteMany({ userId: req.user.id });
+        res.json({ msg: "Удалены все посты ✅" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Ошибка сервера" });
+    }
+};
