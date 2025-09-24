@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { generateTokens } from "../utils/tokens.js";
 import { transporter } from "../utils/mailer.js";
+import { supabase } from "../supabase.js";
 
 // регистрация
 export const register = async (req, res) => {
