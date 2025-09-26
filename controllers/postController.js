@@ -22,7 +22,7 @@ export const createPost = async (req, res) => {
         const newPost = new Post({ userId: req.user.id, title: req.body.title, image: imageUrl, postImgName: postName });
         await newPost.save();
 
-        res.json({ success: "Пост создан", post: newPost });
+        res.json({ msg: "Пост создан", status: "success", post: newPost });
     } catch (err) {
         res.status(500).json({ msg: "Ошибка создания поста", status: "error",  error: err.message });
     }
