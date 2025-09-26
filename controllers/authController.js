@@ -26,7 +26,6 @@ export const register = async (req, res) => {
             imgName = fileName
         }
         
-    
         const newUser = new User({ name, email, password: hashedPassword, avatar: avatarUrl, imageName: imgName, date });
         await newUser.save();
     

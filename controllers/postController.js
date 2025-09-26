@@ -19,12 +19,18 @@ export const createPost = async (req, res) => {
         imageUrl = publicUrl.publicUrl;
         postName = fileName
         }
-        const newPost = new Post({ userId: req.user.id, title: req.body.title, image: imageUrl, postImgName: postName });
+        const newPost = new Post({ 
+            userId: req.user.id, 
+            title: req.body.title, 
+            image: imageUrl, 
+            postImgName: postName,
+            likes: []
+        });
         await newPost.save();
 
-        res.json({ msg: "Пост создан", status: "success", post: newPost });
+        res.json(newPost);
     } catch (err) {
-        res.status(500).json({ msg: "Ошибка сервера, Ошибка создания поста", status: "error",  error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера", status: "error",  error: err.message });
     }
 };
 
@@ -32,10 +38,10 @@ export const createPost = async (req, res) => {
 export const all = async (req, res) => {
     try {
         const posts = await Post.find().populate("userId", "name avatar");
-        res.json({ msg: "Получены все посты", status: "success", allPosts: posts});
+        res.json(posts);
     } catch (error) {
         console.log(error);
-        res.status(500).json({ msg: "Ошибка сервера, Ошибка получены всех пастов", status: "error",  error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера", status: "error",  error: err.message });
     }
     // твоя логика Все посты сюда
 };
@@ -49,18 +55,42 @@ export const mePosts = async (req, res) => {
         if (!myPost || myPost.length === 0) {
             return res.status(404).json({ msg: "У тебя пока нет постов", status: "error"});
         }
-        res.json({ msg: "Получены все мои посты", status: "success",  myposts: myPost});
+        res.json(myPost);
     } catch (error) {
         console.log(error);
-        res.status(500).json({ msg: "Ошибка сервера, Ошибка получения моих постов", status: "error",  error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера", status: "error",  error: err.message });
+    }
+};
+// Лайк
+export const liked = async (req, res) => {
+    // твоя логика Лайк сюда
+    try {
+        const postId = req.params.id;
+        const userId = req.user.id;
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ msg: "Пост не найден", status: "error" });
+
+        // если уже лайкнул → убираем
+        if (post.likes.includes(userId)) {
+            post.likes = post.likes.filter(id => id.toString() !== userId);
+        } else {
+            post.likes.push(userId);
+        }
+
+        await post.save();
+        res.json({ likesCount: post.likes.length, liked: post.likes.includes(userId) });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Ошибка сервера", status: "error" });
     }
 };
 // Удалить мой пост
 export const deletMePost = async (req, res) => {
     // твоя логика Удалить пост сюда
     try {
-        const { id } = req.body
-        const post = await Post.findById(id)
+        const postId = req.params.id
+        const post = await Post.findById(postId)
         if (!post || post.length === 0) {
             return res.status(404).json({ msg: "Пост не найден", status: "error"});
         }
@@ -80,7 +110,7 @@ export const deletMePost = async (req, res) => {
         res.json({ msg: "Пост удален ✅", status: "success" });
     } catch (error) {
         console.log(error);
-        res.status(500).json({ msg: "Ошибка сервера, Ошибка при удалении поста", status: "error",  error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера", status: "error",  error: err.message });
     }
 };
 // Удалить мои посты
@@ -110,6 +140,6 @@ export const deletMePosts = async (req, res) => {
         res.json({ msg: "Удалены все посты ✅", status: "success" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: "Ошибка сервера, Ошибка при удалении постов", status: "error", error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера", status: "error", error: err.message });
     }
 };
