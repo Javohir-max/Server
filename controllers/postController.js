@@ -20,15 +20,15 @@ export const createPost = async (req, res) => {
         postName = fileName
         }
         const newPost = new Post({ 
-            userId: req.user.id, 
-            title: req.body.title, 
-            image: imageUrl, 
+            userId: req.user.id,
+            title: req.body.title,
+            image: imageUrl,
             postImgName: postName,
             likes: []
         });
         await newPost.save();
 
-        res.json(newPost);
+        res.json({ msg: "Пост создан", status: "success", post: newPost });
     } catch (err) {
         res.status(500).json({ msg: "Ошибка сервера", status: "error",  error: err.message });
     }
