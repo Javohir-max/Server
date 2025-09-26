@@ -32,7 +32,7 @@ export const createPost = async (req, res) => {
 export const all = async (req, res) => {
     // твоя логика Все посты сюда
     const posts = await Post.find().populate("userId", "name avatar");
-    res.json({ msg: "Получены все посты", status: "success", posts: posts});
+    res.json({ msg: "Получены все посты", status: "success", posts});
 };
 // Мои посты
 export const mePosts = async (req, res) => {
