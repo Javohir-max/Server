@@ -24,49 +24,64 @@ export const createPost = async (req, res) => {
 
         res.json({ msg: "Пост создан", status: "success", post: newPost });
     } catch (err) {
-        res.status(500).json({ msg: "Ошибка создания поста", status: "error",  error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера, Ошибка создания поста", status: "error",  error: err.message });
     }
 };
 
 // Все посты
 export const all = async (req, res) => {
+    try {
+        const posts = await Post.find().populate("userId", "name avatar");
+        res.json({ msg: "Получены все посты", status: "success", allPosts: posts});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Ошибка сервера, Ошибка получены всех пастов", status: "error",  error: err.message });
+    }
     // твоя логика Все посты сюда
-    const posts = await Post.find().populate("userId", "name avatar");
-    res.json({ msg: "Получены все посты", status: "success", allPosts: posts});
 };
 // Мои посты
 export const mePosts = async (req, res) => {
     // твоя логика Мои посты сюда
-    const myPost = await Post.find({ userId: req.user.id })
-      .populate("userId", "name avatar"); // подтягиваем данные юзера
-
-    if (!myPost || myPost.length === 0) {
-      return res.status(404).json({ msg: "У тебя пока нет постов", status: "error"});
+    try {
+        const myPost = await Post.find({ userId: req.user.id })
+        .populate("userId", "name avatar"); // подтягиваем данные юзера
+        
+        if (!myPost || myPost.length === 0) {
+            return res.status(404).json({ msg: "У тебя пока нет постов", status: "error"});
+        }
+        res.json({ msg: "Получены все мои посты", status: "success",  myposts: myPost});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Ошибка сервера, Ошибка получения моих постов", status: "error",  error: err.message });
     }
-    res.json({ msg: "Получены все мои посты", status: "success",  myposts: myPost});
 };
 // Удалить мой пост
 export const deletMePost = async (req, res) => {
     // твоя логика Удалить пост сюда
-    const { id } = req.body
-    const post = await Post.findById(id)
-    if (!post || post.length === 0) {
-      return res.status(404).json({ msg: "Пост не найден", status: "error"});
-    }
-    // ✅ Если есть аватар — удаляем
-    if (post.postImgName) {
-        const { error: avatarErr } = await supabase.storage
+    try {
+        const { id } = req.body
+        const post = await Post.findById(id)
+        if (!post || post.length === 0) {
+            return res.status(404).json({ msg: "Пост не найден", status: "error"});
+        }
+        // ✅ Если есть аватар — удаляем
+        if (post.postImgName) {
+            const { error: avatarErr } = await supabase.storage
             .from(process.env.S3_BUCKET_TWO)
             .remove([post.postImgName]);
-        if (avatarErr) {
-          console.error("❌ Ошибка удаления аватара из Supabase:", avatarErr.message);
-        } else {
-          console.log("✅ Аватар удалён из Supabase");
+            if (avatarErr) {
+                console.error("❌ Ошибка удаления аватара из Supabase:", avatarErr.message);
+            } else {
+                console.log("✅ Аватар удалён из Supabase");
+            }
         }
+        
+        await Post.findByIdAndDelete(post._id);
+        res.json({ msg: "Пост удален ✅", status: "success" });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Ошибка сервера, Ошибка при удалении поста", status: "error",  error: err.message });
     }
-
-    await Post.findByIdAndDelete(post._id);
-    res.json({ msg: "Пост удален ✅", status: "success" });
 };
 // Удалить мои посты
 export const deletMePosts = async (req, res) => {
@@ -95,6 +110,6 @@ export const deletMePosts = async (req, res) => {
         res.json({ msg: "Удалены все посты ✅", status: "success" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: "Ошибка сервера", status: "error", error: err.message });
+        res.status(500).json({ msg: "Ошибка сервера, Ошибка при удалении постов", status: "error", error: err.message });
     }
 };
