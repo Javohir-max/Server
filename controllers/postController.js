@@ -24,7 +24,7 @@ export const createPost = async (req, res) => {
 
         res.json({ success: "Пост создан", post: newPost });
     } catch (err) {
-        res.status(500).json({ error: "Ошибка создания поста", errorMsg: err.message });
+        res.status(500).json({ msg: "Ошибка создания поста", status: "error",  error: err.message });
     }
 };
 
@@ -32,18 +32,18 @@ export const createPost = async (req, res) => {
 export const all = async (req, res) => {
     // твоя логика Все посты сюда
     const posts = await Post.find().populate("userId", "name avatar");
-    res.json(posts);
+    res.json({ msg: "Получены все посты", status: "success", posts: posts});
 };
 // Мои посты
 export const mePosts = async (req, res) => {
     // твоя логика Мои посты сюда
-    const posts = await Post.find({ userId: req.user.id })
+    const myPost = await Post.find({ userId: req.user.id })
       .populate("userId", "name avatar"); // подтягиваем данные юзера
 
-    if (!posts || posts.length === 0) {
-      return res.status(404).json({ error: "У тебя пока нет постов" });
+    if (!myPost || myPost.length === 0) {
+      return res.status(404).json({ msg: "У тебя пока нет постов", status: "error"});
     }
-    res.json(posts);
+    res.json({ msg: "Получены все мои посты", status: "success",  myposts: myPost});
 };
 // Удалить мой пост
 export const deletMePost = async (req, res) => {
@@ -51,7 +51,7 @@ export const deletMePost = async (req, res) => {
     const { id } = req.body
     const post = await Post.findById(id)
     if (!post || post.length === 0) {
-      return res.status(404).json({ error: "Пост не найден"});
+      return res.status(404).json({ msg: "Пост не найден", status: "error"});
     }
     // ✅ Если есть аватар — удаляем
     if (post.postImgName) {
@@ -66,7 +66,7 @@ export const deletMePost = async (req, res) => {
     }
 
     await Post.findByIdAndDelete(post._id);
-    res.json({ success: "Пост удален ✅", });
+    res.json({ msg: "Пост удален ✅", status: "success" });
 };
 // Удалить мои посты
 export const deletMePosts = async (req, res) => {
@@ -74,7 +74,7 @@ export const deletMePosts = async (req, res) => {
     try {
         const posts = await Post.find({ userId: req.user.id });
     
-        if (posts.length === 0) return res.status(404).json({ error: "Посты не найден ❌" })
+        if (posts.length === 0) return res.status(404).json({ msg: "Посты не найден ❌", status: "error" })
           // соберём все пути файлов из постов (если там картинки в Supabase)
         const filesToDelete = posts
             .map((p) => p.postImgName) // предположим, что поле imageName хранит имя файла
@@ -92,9 +92,9 @@ export const deletMePosts = async (req, res) => {
             }
         }
         await Post.deleteMany({ userId: req.user.id });
-        res.json({ success: "Удалены все посты ✅" });
+        res.json({ msg: "Удалены все посты ✅", status: "success" });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Ошибка сервера" });
+        res.status(500).json({ msg: "Ошибка сервера", status: "error", error: err.message });
     }
 };
