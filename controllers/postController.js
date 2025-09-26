@@ -22,9 +22,9 @@ export const createPost = async (req, res) => {
         const newPost = new Post({ userId: req.user.id, title: req.body.title, image: imageUrl, postImgName: postName });
         await newPost.save();
 
-        res.json({ msg: "Пост создан", post: newPost });
+        res.json({ success: "Пост создан", post: newPost });
     } catch (err) {
-        res.status(500).json({ msg: "Ошибка создания поста", error: err.message });
+        res.status(500).json({ error: "Ошибка создания поста", errorMsg: err.message });
     }
 };
 
@@ -41,7 +41,7 @@ export const mePosts = async (req, res) => {
       .populate("userId", "name avatar"); // подтягиваем данные юзера
 
     if (!posts || posts.length === 0) {
-      return res.status(404).json({ msg: "У тебя пока нет постов" });
+      return res.status(404).json({ error: "У тебя пока нет постов" });
     }
     res.json(posts);
 };
@@ -51,7 +51,7 @@ export const deletMePost = async (req, res) => {
     const { id } = req.body
     const post = await Post.findById(id)
     if (!post || post.length === 0) {
-      return res.status(404).json({ msg: "Пост не найден" });
+      return res.status(404).json({ error: "Пост не найден"});
     }
     // ✅ Если есть аватар — удаляем
     if (post.postImgName) {
@@ -66,7 +66,7 @@ export const deletMePost = async (req, res) => {
     }
 
     await Post.findByIdAndDelete(post._id);
-    res.json({ msg: "Пост удален ✅" });
+    res.json({ success: "Пост удален ✅", });
 };
 // Удалить мои посты
 export const deletMePosts = async (req, res) => {
@@ -92,7 +92,7 @@ export const deletMePosts = async (req, res) => {
             }
         }
         await Post.deleteMany({ userId: req.user.id });
-        res.json({ msg: "Удалены все посты ✅" });
+        res.json({ success: "Удалены все посты ✅" });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Ошибка сервера" });
