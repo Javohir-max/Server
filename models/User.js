@@ -8,6 +8,8 @@ const userSchema = new mongoose.Schema({
   imageName: { type: String },
   refreshToken: { type: String, default: null }, // токен для обновления
   date: { type: Date, default: null },
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
 });
 
 export default mongoose.model("User", userSchema);
