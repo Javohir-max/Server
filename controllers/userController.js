@@ -62,6 +62,47 @@ export const all = async (req, res) => {
     }
 };
 
+// Подписаться/отписаться
+export const follow = async (req, res) => {
+  // твоя логика Подписаться/отписаться сюда
+  try {
+    const targetUserId = req.params.id
+    const userId = req.user.id
+    
+    if (targetUserId === userId) {
+      return res.status(400).json({ msg: "Нельзя подписаться на себя" })
+    }
+
+    const me = await User.findById(userId)
+    const target = await User.findById(targetUserId)
+
+    if (!target) return res.status(404).json({ msg: "Пользователь не найден" })
+
+    const alreadyFollowing = me.following.includes(targetUserId)
+
+    if (alreadyFollowing) {
+      // отписка
+      me.following = me.following.filter(id => id.toString() !== targetUserId)
+      target.followers = target.followers.filter(id => id.toString() !== userId)
+    } else {
+      // подписка
+      me.following.push(targetUserId)
+      target.followers.push(userId)
+    }
+
+    await me.save()
+    await target.save()
+
+    res.json({
+      following: !alreadyFollowing,
+      followersCount: target.followers.length
+    })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ msg: "Ошибка сервера" })
+  }
+};
+
 // Удалить аккаунт
 export const delet = async (req, res) => {
   try {
