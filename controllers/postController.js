@@ -85,6 +85,25 @@ export const liked = async (req, res) => {
         res.status(500).json({ msg: "Ошибка сервера", status: "error" });
     }
 };
+// Комментарий
+export const comment = async (req, res) => {
+    // твоя логика Комментарий сюда
+    try {
+        const postId = req.params.id;
+        const userId = req.user.id;
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ msg: "Пост не найден", status: "error" });
+
+        const newComment = { userId, text: req.body.text };
+        post.comments.push(newComment);
+        await post.save();
+        res.json({ msg: "Комментарий добавлен", status: "success", comment: newComment });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Ошибка сервера", status: "error" });
+    }
+};
 // Удалить мой пост
 export const deletMePost = async (req, res) => {
     // твоя логика Удалить пост сюда
