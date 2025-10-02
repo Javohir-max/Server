@@ -91,12 +91,12 @@ export const comment = async (req, res) => {
     try {
         const postId = req.params.id;
         const userId = req.user.id;
-        const commet = req.body.comment
+        const commet = req
         console.log(postId, userId, commet);
+        return
         if (!commet) {
             return res.status(400).json({ msg: "Текст комментария обязателен", status: "error" });
         }
-        
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ msg: "Пост не найден", status: "error" });
 
