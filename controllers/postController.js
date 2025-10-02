@@ -91,11 +91,12 @@ export const comment = async (req, res) => {
     try {
         const postId = req.params.id;
         const userId = req.user.id;
+        const commet = req.body.comment
 
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ msg: "Пост не найден", status: "error" });
 
-        const newComment = { userId, text: req.body.text };
+        const newComment = { userId, text: commet, createdAt: new Date().getTime() };
         post.comments.push(newComment);
         await post.save();
         res.json({ msg: "Комментарий добавлен", status: "success", comment: newComment });
