@@ -91,9 +91,7 @@ export const comment = async (req, res) => {
     try {
         const postId = req.params.id;
         const userId = req.user.id;
-        const commet = req
-        console.log(postId, userId, commet);
-        return
+        const commet = req.body.text;
         if (!commet) {
             return res.status(400).json({ msg: "Текст комментария обязателен", status: "error" });
         }
