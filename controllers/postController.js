@@ -37,7 +37,9 @@ export const createPost = async (req, res) => {
 // Все посты
 export const all = async (req, res) => {
     try {
-        const posts = await Post.find().populate("userId", "name avatar");
+        const posts = await Post.find()
+            .populate("userId", "name avatar") // подтягиваем данные юзера
+            .populate("comments.userId", "name avatar"); // авторы комментариев
         res.json(posts);
     } catch (error) {
         console.log(error);
@@ -50,7 +52,8 @@ export const mePosts = async (req, res) => {
     // твоя логика Мои посты сюда
     try {
         const myPost = await Post.find({ userId: req.user.id })
-        .populate("userId", "name avatar"); // подтягиваем данные юзера
+            .populate("userId", "name avatar") // подтягиваем данные юзера
+            .populate("comments.userId", "name avatar"); // авторы комментариев
         
         if (!myPost || myPost.length === 0) {
             return res.status(404).json({ msg: "У тебя пока нет постов", status: "error"});
@@ -101,7 +104,10 @@ export const comment = async (req, res) => {
         const newComment = { userId, text: commet, createdAt: new Date().getTime() };
         post.comments.push(newComment);
         await post.save();
-        res.json({ msg: "Комментарий добавлен", status: "success", comment: newComment });
+        // подтягиваем user-данные
+        const populatedPost = await Post.findById(postId)
+            .populate("comments.userId", "name avatar");
+        res.json({ msg: "Комментарий добавлен", status: "success", comment: populatedPost });
     } catch (error) {
         console.log(error);
         res.status(500).json({ msg: "Ошибка сервера", status: "error" });
