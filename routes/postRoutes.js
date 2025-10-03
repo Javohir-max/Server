@@ -14,7 +14,7 @@ import upload from "../middleware/upload.js";
 const router = Router();
 
 router.post("/me", authMiddleware, upload.single("image"), createPost);
-router.get("/all",authMiddleware, all);
+router.get("/all", all);
 router.get("/me", authMiddleware, mePosts);
 router.post("/:id/like", authMiddleware, liked);
 router.post("/:id/comment", authMiddleware, comment);
