@@ -130,8 +130,10 @@ export const deleteComment = async (req, res) => {
         );
         
         await post.save();
+        const populatedPost = await Post.findById(postId)
+            .populate("comments.userId", "name avatar");
 
-        res.json({ msg: "Комментарий удален", status: "success", comment: post });
+        res.json({ msg: "Комментарий удален", status: "success", comment: populatedPost });
     } catch (error) {
         console.log(error);
         res.status(500).json({ msg: "Ошибка сервера", status: "error" });
