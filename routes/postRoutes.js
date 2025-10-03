@@ -19,7 +19,7 @@ router.get("/all", all);
 router.get("/me", authMiddleware, mePosts);
 router.post("/:id/like", authMiddleware, liked);
 router.post("/:id/comment", authMiddleware, comment);
-router.delete("/:postId/comment/commentId", authMiddleware, deleteComment);
+router.delete("/:postId/comment/:commentId", authMiddleware, deleteComment);
 router.delete("/me/:id", authMiddleware, deletMePost);
 router.delete("/all", authMiddleware, deletMePosts);
 
