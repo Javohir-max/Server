@@ -113,6 +113,30 @@ export const comment = async (req, res) => {
         res.status(500).json({ msg: "Ошибка сервера", status: "error" });
     }
 };
+
+// Удвлить комментарий
+export const deleteComment = async (req, res) => {
+    // твоя логика Удалить комментарий сюда
+    try {
+        const { postId, commentId } = req.params;
+        const userId = req.user.id;
+        
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ msg: "Пост не найден", status: "error" });
+
+        post.comments = post.comments.filter(
+            (comment) => comment._id.toString() !== commentId
+            // && comment.userId.toString() === userId // если нужно удалять только свои комментарии
+        );
+        
+        await post.save();
+
+        res.json({ msg: "Комментарий удален", status: "success", comment: post });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Ошибка сервера", status: "error" });
+    }
+};
 // Удалить мой пост
 export const deletMePost = async (req, res) => {
     // твоя логика Удалить пост сюда
