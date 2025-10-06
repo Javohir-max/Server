@@ -82,7 +82,7 @@ export const liked = async (req, res) => {
         }
 
         await post.save();
-        res.json({ likesCount: post.likes.length, liked: post.likes.includes(userId) });
+        res.json({ likes: post.likes });
     } catch (error) {
         console.log(error);
         res.status(500).json({ msg: "Ошибка сервера", status: "error" });
