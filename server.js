@@ -2,9 +2,11 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from 'path';
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
+import convertRoutes from "./routes/convertRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -32,10 +34,14 @@ app.use(
   })
 );
 
+// Статика для отдачи сконвертированных изображений
+app.use(express.static(path.join(process.cwd(), 'public')));
+
 // маршруты
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/convert", convertRoutes);
 app.get("/api/start", async (req, res) => {
   const response = {
     message: "Server is running",
