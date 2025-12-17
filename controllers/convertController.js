@@ -36,3 +36,9 @@ export const convert = async (req, res) => {
     res.status(500).json({ message: 'Conversion failed', status: 'error' })
   }
 }
+
+export const download = (req, res) => {
+  const filePath = path.join(process.cwd(), 'public', req.params.name)
+
+  res.download(filePath) // ← magic here
+}
