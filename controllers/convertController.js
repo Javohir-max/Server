@@ -1,27 +1,38 @@
-import sharp from 'sharp';
-import fs from 'fs';
-import path from 'path';
+import sharp from 'sharp'
+import fs from 'fs'
+import path from 'path'
 
-// Конвертация любого изображения в JPG
 export const convert = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded', status: 'error' });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded', status: 'error' })
+    }
 
-    const buffer = fs.readFileSync(req.file.path);
+    // гарантируем наличие папки public
+    const publicDir = path.join(process.cwd(), 'public')
+    if (!fs.existsSync(publicDir)) {
+      fs.mkdirSync(publicDir, { recursive: true })
+    }
 
-    // Конвертируем в JPG
-    const jpgBuffer = await sharp(buffer)
+    const buffer = fs.readFileSync(req.file.path)
+
+    // безопасное имя файла (без кириллицы и пробелов)
+    const safeName =
+      Date.now() + '-' +
+      path.parse(req.file.originalname).name
+        .replace(/[^a-z0-9]/gi, '_')
+        .toLowerCase()
+
+    const outputFileName = `${safeName}.jpg`
+    const outputPath = path.join(publicDir, outputFileName)
+
+    await sharp(buffer)
       .jpeg({ quality: 90 })
-      .toBuffer();
+      .toFile(outputPath)
 
-    const outputFileName = `${path.parse(req.file.originalname).name}.jpg`;
-    const outputPath = path.join('public', outputFileName);
-
-    fs.writeFileSync(outputPath, jpgBuffer);
-
-    res.json({ url: `/${outputFileName}`, status: 'success'});
+    res.json({ url: `/${outputFileName}`, status: 'success' })
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Conversion failed', status: 'error' });
+    console.error(err)
+    res.status(500).json({ message: 'Conversion failed', status: 'error' })
   }
-};
+}
