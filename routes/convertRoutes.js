@@ -6,6 +6,6 @@ const router = Router();
 const upload = multer({ dest: 'uploads/' }); // временная папка для загрузки файлов
 
 router.post("/image", upload.single('file'), convert);
-router.get("/download:name", download);
+router.get("/download/:name", download);
 
 export default router;
