@@ -15,7 +15,8 @@ app.use(express.json());
 // app.use(cors({ origin: "https://site-nu-liart.vercel.app", credentials: true }));
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://site-nu-liart.vercel.app"
+  "https://site-nu-liart.vercel.app",
+  "https://me-app-two.vercel.app"
 ];
 
 app.use(
